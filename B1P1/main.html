@@ -132,6 +132,7 @@
             const children = scene.children.filter(el => !el.static);
             
             var drag = null;
+            var rotate = null;
             window.addEventListener('pointermove', (e) => {
                 pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
 	            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -139,21 +140,29 @@
                 if (drag !== null) {
                     drag.object.position.x = pointer.x < -1 ? -1 : pointer.x > 1 ? 1 : (pointer.x - drag.deltaX);
                     drag.object.position.y = pointer.y < -1 ? -1 : pointer.y > 1 ? 1 : (pointer.y - drag.deltaY);
+                } else if (rotate !== null) {
+                    rotate.object.rotation.z = Math.atan((pointer.y - rotate.object.position.y)/((pointer.x - rotate.object.position.x)))
                 }
             });
             window.addEventListener('mousedown', (e) => {
-                let intersects = raycaster.intersectObjects(children);
+                let intersects = raycaster.intersectObjects(children), selected;
                 if (intersects.length > 0) {
-                    drag = intersects[0];
-                    drag.deltaX = drag.point.x - drag.object.position.x;
-                    drag.deltaY = drag.point.y - drag.object.position.y;
+                    selected = intersects[0];
+                    if (event.button === 0 && rotate === null) {
+                        drag = selected;
+                        drag.deltaX = drag.point.x - drag.object.position.x;
+                        drag.deltaY = drag.point.y - drag.object.position.y;
+                    } else if (event.button !== 0 && drag === null) {
+                        rotate = selected;
+                    }
                     for (let i = 0; i < children.length; i++) {
-                        children[i].position.z = (drag.object.id === children[i].id) ? elements.length : i;
+                        children[i].position.z = (selected.object.id === children[i].id) ? elements.length : i;
                     }
                 }
             });
             window.addEventListener('mouseup', (e) => {
                 drag = null;
+                rotate = null;
                 if (intersectionArea() > 0.95) {
                     document.getElementById("myModal").style.display = "block";
                 }
