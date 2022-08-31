@@ -5,15 +5,51 @@
 		<title>CCI36 - BIMESTRE 1 - PROJETO 1</title>
 		<style>
 			body { margin: 0; }
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgb(0,0,0);
+                background-color: rgba(0,0,0,0.4);
+            }
+            .modal-content {
+                background-color: #fefefe;
+                border: 1px solid #888;
+                width: 80%;
+                margin: 30vh auto;
+                height: 35vh;
+                justify-content: center;
+                display: flex;
+                align-items: center;
+                font-size: 30px;
+                font-weight: bold;
+            }
 		</style>
 	</head>
 	<body>
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+              <p>Parabéns, você venceu!</p>
+            </div>
+          </div>
 		<script src="js/three.js"></script>
 		<script>
             function animate() {
-                //requestAnimationFrame( animate );
+                requestAnimationFrame(animate);
                 raycaster.setFromCamera(pointer, camera);
-                console.log(raycaster.intersectObjects(scene.children))
+                let intersects = raycaster.intersectObjects(children);
+                let i, aux = null;
+                if (intersects.length > 0) {
+                    aux = intersects[0].object;
+                }
+                for (i = 0; i < children.length; i++) {
+                    children[i].material.color.set((aux !== null && children[i].id === aux.id) ? 0xbabaad : children[i].material.originalColor);
+                }
                 renderer.render(scene, camera);
             }
 
@@ -24,18 +60,36 @@
                         geometry = new THREE.BoxGeometry(elements[i].width, elements[i].height, 1);
                     }
                     material = new THREE.MeshBasicMaterial({ color: elements[i].color });
+                    material.originalColor = { ...material.color };
                     el = new THREE.Mesh(geometry, material);
                     el.rotation.z = elements[i].rotation;
                     el.position.x = elements[i].x;
                     el.position.y = elements[i].y;
+                    el.position.z = i;
+                    el.static = false;
                     scene.add(el);
                 }
             }
 
+            function createStaticElement() {
+                geometry = new THREE.BoxGeometry(0.2, 0.2, 1);
+                material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                el = new THREE.Mesh(geometry, material);
+                el.position.x = 0.6;
+                el.position.y = 0;
+                el.position.z = -1;
+                el.static = true;
+                scene.add(el);
+            }
+
+            function intersectionArea() {
+                return 0;
+            }
+
 			const scene = new THREE.Scene();
 
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 10;
+            const camera = new THREE.OrthographicCamera();
+            camera.position.z = 1000;
 
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -48,20 +102,75 @@
                 {
                     type: "rectangle",
                     color: 0x00ff00,
-                    width: 1,
-                    height: 2,
+                    width: 0.1,
+                    height: 0.2,
                     rotation: 0,
                     x: 0,
                     y: 0
+                },
+                {
+                    type: "rectangle",
+                    color: 0x0000ff,
+                    width: 0.1,
+                    height: 0.2,
+                    rotation: 0,
+                    x: 0.05,
+                    y: 0.1
+                },
+                {
+                    type: "rectangle",
+                    color: 0xff0000,
+                    width: 0.1,
+                    height: 0.2,
+                    rotation: 0,
+                    x: -0.02,
+                    y: -0.05
                 }
             ];
-            createElements(elements, scene);
-
+            createElements();
+            createStaticElement();
+            const children = scene.children.filter(el => !el.static);
+            
+            var drag = null;
             window.addEventListener('pointermove', (e) => {
                 pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
 	            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            })
-            animate(scene, camera, raycaster, camera);
+
+                if (drag !== null) {
+                    drag.object.position.x = pointer.x < -1 ? -1 : pointer.x > 1 ? 1 : (pointer.x - drag.deltaX);
+                    drag.object.position.y = pointer.y < -1 ? -1 : pointer.y > 1 ? 1 : (pointer.y - drag.deltaY);
+                }
+            });
+            window.addEventListener('mousedown', (e) => {
+                let intersects = raycaster.intersectObjects(children);
+                if (intersects.length > 0) {
+                    drag = intersects[0];
+                    drag.deltaX = drag.point.x - drag.object.position.x;
+                    drag.deltaY = drag.point.y - drag.object.position.y;
+                    for (let i = 0; i < children.length; i++) {
+                        children[i].position.z = (drag.object.id === children[i].id) ? elements.length : i;
+                    }
+                }
+            });
+            window.addEventListener('mouseup', (e) => {
+                drag = null;
+                if (intersectionArea() > 0.95) {
+                    document.getElementById("myModal").style.display = "block";
+                }
+            });
+            window.addEventListener('mousewheel', (e) => {
+                let aux = drag;
+                if (aux === null) {
+                    let intersects = raycaster.intersectObjects(children);
+                    if (intersects.length > 0) {
+                        aux = intersects[0];
+                    }
+                }
+                if (aux !== null) {
+                    aux.object.rotation.z -= e.wheelDelta / 2000;
+                }
+            });
+            animate();
 		</script>
 	</body>
 </html>
