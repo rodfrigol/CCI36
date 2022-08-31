@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script>
+
+function id(x) {return document.getElementById(x);}
+
+</script>
+
+</head>
+
+<body>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="364.7222px"
+   height="161.55325px"
+   viewBox="0 0 364.7222 161.55325"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <path
+     id="tri2-9"
+     style="fill:#4d4d4d;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="M 231.16634,0.1322915 V 47.424488 l -46.99609,46.9961 20.6468,0.0367 0.41651,66.127232 -0.83974,0.83508 135.62014,-0.57565 -1.91616,-1.86503 0.55965,-64.475122 h 25.74676 l -66.42386,-66.841395 -19.466,19.466515 V 0.1322915 Z" />
+  <g
+     id="layer1"
+     transform="translate(-46.638695,-59.502312)">
+    <path
+       style="fill:#ff0000;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 46.958107,73.831854 113.79989,140.67364 46.958107,207.09729 Z"
+       id="tri2" />
+    <path
+       style="fill:#aa0000;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 179.80541,73.674771 46.958107,74.249991 113.79989,140.67364 Z"
+       id="tri1" />
+    <path
+       style="fill:#ff00ff;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 146.53452,106.94566 v 66.88075 l -33.15276,-33.15277 z"
+       id="tri4" />
+    <path
+       style="fill:#008080;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 179.80541,73.674771 v 66.998869 l -33.27089,33.15277 v -66.88075 z"
+       id="tri3" />
+    <path
+       style="fill:#ffff00;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 79.823261,173.65692 33.440379,33.44037 33.27088,-33.68902 -33.2313,-33.23131 z"
+       id="tri5" />
+    <path
+       style="fill:#800080;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 46.958107,206.52207 32.865154,-32.86515 33.440369,33.44037 z"
+       id="tri6" />
+    <path
+       style="fill:#808000;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 113.26364,207.09729 66.54177,-66.42365 0.41813,66.42365 z"
+       id="tri7" />
+  </g>
+</svg>
+</body>
+
+
+<script>
+
+var moving=null
+var hovering=null
+var grabx=0;
+var graby=0;
+
+tangramos=["tri1","tri2","tri3","tri4","tri5","tri6","tri7"]
+
+for (i=0; i<tangramos.length; i++) 
+{
+  t=tangramos[i];
+  id(t).rot=0;
+  id(t).tx=0;
+  id(t).ty=0;
+  id(t).rx=100;
+  id(t).ry=100;
+
+  id(t).setAttribute("onmousedown", 'moving='+t+'; grabx=event.pageX; graby=event.pageY;' );
+  id(t).setAttribute("onmouseenter", 'hovering='+t+';' );
+  id(t).setAttribute("onmouseleave", 'hovering=null;' );
+}  
+
+//tri1.rx=100;
+//tri1.ry=100;
+//id("tri1").setAttribute("onmousedown", 'moving=tri1; grabx=event.pageX; graby=event.pageY;' );
+//id("tri1").setAttribute("onmouseenter", 'hovering=tri1;' );
+//id("tri1").setAttribute("onmouseleave", 'hovering=null;' );
+
+
+document.onmousemove= function(event) {
+  if (moving)
+  {
+    moving.setAttribute("transform","translate(XX,YY),translate(RX,RY),rotate(RR),translate(NRX,NRY)"
+	.replace("XX",moving.tx+event.pageX-grabx)
+	.replace("YY",moving.ty+event.pageY-graby)
+	.replace("RR",moving.rot)
+	.replace("RX",moving.rx)
+	.replace("RY",moving.ry)
+	.replace("NRX",-moving.rx)
+	.replace("NRY",-moving.ry)
+	);
+  }
+}
+
+document.onmouseup= function(event) {
+  if(moving){
+    moving.tx=moving.tx+event.pageX-grabx;
+	moving.ty=moving.ty+event.pageY-graby;
+  }
+	
+  moving=null;
+}
+
+document.onwheel= function(event) {
+  if(hovering){
+    hovering.rot+=event.deltaY/30;
+    hovering.setAttribute("transform","translate(XX,YY),translate(RX,RY),rotate(RR),translate(NRX,NRY)"
+	.replace("XX",hovering.tx)
+	.replace("YY",hovering.ty)
+	.replace("RR",hovering.rot)
+	.replace("RX",hovering.rx)
+	.replace("RY",hovering.ry)
+	.replace("NRX",-hovering.rx)
+	.replace("NRY",-hovering.ry)
+	);
+  }
+}
+
+
+</script>
+
+</html>
