@@ -139,8 +139,9 @@
 	            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
                 if (drag !== null) {
-                    drag.object.position.x = pointer.x < -1 ? -1 : pointer.x > 1 ? 1 : (pointer.x - drag.deltaX);
-                    drag.object.position.y = pointer.y < -1 ? -maxY : pointer.y > 1 ? maxY : (pointer.y - drag.deltaY) * maxY;
+                    let auxX = pointer.x - drag.deltaX, auxY = pointer.y * maxY - drag.deltaY;
+                    drag.object.position.x = auxX < -1 ? -1 : auxX > 1 ? 1 : auxX;
+                    drag.object.position.y = auxY < -1 ? -maxY : auxY > 1 ? maxY : auxY;
                 } else if (rotate !== null) {
                     rotate.object.rotation.z = Math.atan((pointer.y - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
                 }
