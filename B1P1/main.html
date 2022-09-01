@@ -141,9 +141,9 @@
                 if (drag !== null) {
                     let auxX = pointer.x - drag.deltaX, auxY = pointer.y * maxY - drag.deltaY;
                     drag.object.position.x = auxX < -1 ? -1 : auxX > 1 ? 1 : auxX;
-                    drag.object.position.y = auxY < -1 ? -maxY : auxY > 1 ? maxY : auxY;
+                    drag.object.position.y = auxY < -maxY ? -maxY : auxY > maxY ? maxY : auxY;
                 } else if (rotate !== null) {
-                    rotate.object.rotation.z = Math.atan((pointer.y - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
+                    rotate.object.rotation.z = Math.atan((pointer.y * maxY - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
                 }
             });
             window.addEventListener('mousedown', (e) => {
@@ -156,7 +156,7 @@
                         drag.deltaY = drag.point.y - drag.object.position.y;
                     } else if (event.button !== 0 && drag === null) {
                         rotate = selected;
-                        rotate.initial = Math.atan((rotate.point.y - rotate.object.position.y)/(rotate.point.x - rotate.object.position.x));
+                        rotate.initial = Math.atan((rotate.point.y - rotate.object.position.y)/(rotate.point.x - rotate.object.position.x)) - rotate.object.rotation.z;
                     }
                     for (let i = 0; i < children.length; i++) {
                         children[i].position.z = (selected.object.id === children[i].id) ? elements.length : i;
