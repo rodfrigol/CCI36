@@ -87,8 +87,9 @@
             }
 
 			const scene = new THREE.Scene();
-
-            const camera = new THREE.OrthographicCamera();
+            
+            const maxY = window.innerHeight / window.innerWidth;
+            const camera = new THREE.OrthographicCamera(-1, 1, maxY, -maxY);
             camera.position.z = 1000;
 
             const renderer = new THREE.WebGLRenderer();
@@ -139,7 +140,7 @@
 
                 if (drag !== null) {
                     drag.object.position.x = pointer.x < -1 ? -1 : pointer.x > 1 ? 1 : (pointer.x - drag.deltaX);
-                    drag.object.position.y = pointer.y < -1 ? -1 : pointer.y > 1 ? 1 : (pointer.y - drag.deltaY);
+                    drag.object.position.y = pointer.y < -1 ? -maxY : pointer.y > 1 ? maxY : (pointer.y - drag.deltaY) * maxY;
                 } else if (rotate !== null) {
                     rotate.object.rotation.z = Math.atan((pointer.y - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
                 }
