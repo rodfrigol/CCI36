@@ -138,7 +138,35 @@
             }
 
             function intersectionArea() {
-                return 0;
+                let ray = new THREE.Raycaster();
+                let cursor = new THREE.Vector2();
+
+                let minX = 0.4, maxX = 0.85, minY = -0.47, maxY = 0.4, i, j, z, aux;
+                let has_static, has_non_static, static_area = 0, non_static_area = 0;
+
+                for (i = minX; i <= maxX; i += 0.01) {
+                    for (j = minY; j <= maxY; j += 0.01) {
+                        cursor.x = i;
+                        cursor.y = j;
+                        ray.setFromCamera(cursor, camera);
+
+                        aux = ray.intersectObjects(scene.children);
+                        has_static = false;
+                        has_non_static = false;
+                        for (z = 0; z < aux.length; z++) {
+                            if (aux[z].object.static)
+                                has_static = true;
+                            else
+                                has_non_static = true;
+                        }
+                        if (has_static) {
+                            static_area ++;
+                            if (has_non_static)
+                                non_static_area ++;
+                        }
+                    }
+                }
+                return non_static_area / static_area;
             }
 
 			const scene = new THREE.Scene();
