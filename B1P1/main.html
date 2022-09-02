@@ -59,6 +59,15 @@
                     if (elements[i].type === "rectangle") {
                         geometry = new THREE.BoxGeometry(elements[i].width, elements[i].height, 1);
                     }
+			  if (elements[i].type === "circle") {
+                        geometry = new THREE.CircleGeometry(elements[i].radius, elements[i].segments, elements[i].thetaStart, Math.PI * 2);
+                    }
+			  if (elements[i].type === "hexagon") {
+                        geometry = new THREE.CircleGeometry(elements[i].radius, elements[i].segments, elements[i].thetaStart, Math.PI * 2);
+                    }
+			  if (elements[i].type === "diamond") {
+				geometry = new THREE.BoxGeometry(elements[i].width, elements[i].height, 1);
+			  }
                     material = new THREE.MeshBasicMaterial({ color: elements[i].color });
                     material.originalColor = { ...material.color };
                     el = new THREE.Mesh(geometry, material);
@@ -79,7 +88,53 @@
                 el.position.y = 0;
                 el.position.z = -1;
                 el.static = true;
+
+		    geometry2 = new THREE.CircleGeometry(0.075, 100, 0, Math.PI * 2);
+		    material2 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el2 = new THREE.Mesh(geometry2, material2);
+                el2.position.x = 0.55;
+		    el2.position.y = 0.17;
+		    el2.position.z = -1;
+		    el2.static = true;
+
+		    geometry3 = new THREE.CircleGeometry(0.05, 100, 0, 6.28);
+		    material3 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el3 = new THREE.Mesh(geometry3, material3);
+                el3.position.x = 0.65;
+		    el3.position.y = 0.14;
+		    el3.position.z = -1;
+		    el3.static = true;
+
+		    geometry4 = new THREE.CircleGeometry(0.05, 6, Math.PI/2, 6.28);
+		    material4 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el4 = new THREE.Mesh(geometry4, material4);
+                el4.position.x = 0.46;
+		    el4.position.y = 0.05;
+		    el4.position.z = -1;
+		    el4.static = true;
+
+		    geometry5 = new THREE.BoxGeometry(0.2, 0.2, 1);
+		    material5 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el5 = new THREE.Mesh(geometry5, material5);
+                el5.position.x = 0.75;
+		    el5.position.y = -0.2;
+		    el5.position.z = -1;
+		    el5.static = true;
+
+                geometry6 = new THREE.BoxGeometry(0.1, 0.2, 1);
+                material6 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                el6 = new THREE.Mesh(geometry6, material6);
+                el6.position.x = 0.55;
+                el6.position.y = -0.2;
+                el6.position.z = -1;
+                el6.static = true;
+ 
                 scene.add(el);
+		    scene.add(el2);
+		    scene.add(el3);
+		    scene.add(el4);
+		    scene.add(el5);
+		    scene.add(el6);
             }
 
             function intersectionArea() {
@@ -126,7 +181,46 @@
                     rotation: 0,
                     x: -0.02,
                     y: -0.05
-                }
+                },
+		    {
+                    type: "circle",
+                    color: 0x4169E1,
+                    radius: 0.05,
+                    thetaStart: 0,
+			  segments: 100,
+                    rotation: 0,
+                    x: -0.1,
+                    y: -0.1
+                },
+		    {
+                    type: "circle",
+                    color: 0xf8c300,
+                    radius: 0.075,
+                    thetaStart: 0,
+			  segments: 100,
+                    rotation: 0,
+                    x: -0.5,
+                    y: -0.1
+                },
+		    {
+                    type: "hexagon",
+                    color: 0xf8c5ff,
+                    radius: 0.05,
+                    thetaStart: 0,
+			  segments: 6,
+                    rotation: 0,
+                    x: -0.1,
+                    y: -0.2
+                },
+		    {
+                    type: "diamond",
+                    color: 0xff00ff,
+			  width: 0.2,
+                    height: 0.2,
+                    rotation: Math.PI / 4,
+                    x: -0.02,
+                    y: -0.05
+                },
             ];
             createElements();
             createStaticElement();
