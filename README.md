@@ -1,10 +1,20 @@
 # CCI36
 
+### Point-in-polygon
+
+Para identificar se o cursor do mouse está sobre algum polígono usamos a função ```intersectObjects``` do three.js.
+```
+let intersects = raycaster.intersectObjects(children);
+let aux = null;
+if (intersects.length > 0) {
+    aux = intersects[0].object;
+}
+```
+Através do código acima conseguimos, dentre os objetos que estão sobre o mouse, selecionar o que está mais acima.
+
 ### Renderização de objetos dinâmicos
 
 ### Renderização de objetos estáticos
-
-### Hover (Point-in-polygon)
 
 ### Drag suave e com limites
 
