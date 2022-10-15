@@ -59,6 +59,15 @@
                     if (elements[i].type === "rectangle") {
                         geometry = new THREE.BoxGeometry(elements[i].width, elements[i].height, 1);
                     }
+			  if (elements[i].type === "circle") {
+                        geometry = new THREE.CircleGeometry(elements[i].radius, elements[i].segments, elements[i].thetaStart, Math.PI * 2);
+                    }
+			  if (elements[i].type === "hexagon") {
+                        geometry = new THREE.CircleGeometry(elements[i].radius, elements[i].segments, elements[i].thetaStart, Math.PI * 2);
+                    }
+			  if (elements[i].type === "diamond") {
+				geometry = new THREE.BoxGeometry(elements[i].width, elements[i].height, 1);
+			  }
                     material = new THREE.MeshBasicMaterial({ color: elements[i].color });
                     material.originalColor = { ...material.color };
                     el = new THREE.Mesh(geometry, material);
@@ -79,16 +88,91 @@
                 el.position.y = 0;
                 el.position.z = -1;
                 el.static = true;
+
+		    geometry2 = new THREE.CircleGeometry(0.075, 100, 0, Math.PI * 2);
+		    material2 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el2 = new THREE.Mesh(geometry2, material2);
+                el2.position.x = 0.55;
+		    el2.position.y = 0.17;
+		    el2.position.z = -1;
+		    el2.static = true;
+
+		    geometry3 = new THREE.CircleGeometry(0.05, 100, 0, 6.28);
+		    material3 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el3 = new THREE.Mesh(geometry3, material3);
+                el3.position.x = 0.65;
+		    el3.position.y = 0.14;
+		    el3.position.z = -1;
+		    el3.static = true;
+
+		    geometry4 = new THREE.CircleGeometry(0.05, 6, Math.PI/2, 6.28);
+		    material4 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el4 = new THREE.Mesh(geometry4, material4);
+                el4.position.x = 0.46;
+		    el4.position.y = 0.05;
+		    el4.position.z = -1;
+		    el4.static = true;
+
+		    geometry5 = new THREE.BoxGeometry(0.2, 0.2, 1);
+		    material5 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+		    el5 = new THREE.Mesh(geometry5, material5);
+                el5.position.x = 0.75;
+		    el5.position.y = -0.2;
+		    el5.position.z = -1;
+		    el5.static = true;
+
+                geometry6 = new THREE.BoxGeometry(0.1, 0.2, 1);
+                material6 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                el6 = new THREE.Mesh(geometry6, material6);
+                el6.position.x = 0.55;
+                el6.position.y = -0.2;
+                el6.position.z = -1;
+                el6.static = true;
+ 
                 scene.add(el);
+		    scene.add(el2);
+		    scene.add(el3);
+		    scene.add(el4);
+		    scene.add(el5);
+		    scene.add(el6);
             }
 
             function intersectionArea() {
-                return 0;
+                let ray = new THREE.Raycaster();
+                let cursor = new THREE.Vector2();
+
+                let minX = 0.4, maxX = 0.85, minY = -0.47, maxY = 0.4, i, j, z, aux;
+                let has_static, has_non_static, static_area = 0, non_static_area = 0;
+
+                for (i = minX; i <= maxX; i += 0.01) {
+                    for (j = minY; j <= maxY; j += 0.01) {
+                        cursor.x = i;
+                        cursor.y = j;
+                        ray.setFromCamera(cursor, camera);
+
+                        aux = ray.intersectObjects(scene.children);
+                        has_static = false;
+                        has_non_static = false;
+                        for (z = 0; z < aux.length; z++) {
+                            if (aux[z].object.static)
+                                has_static = true;
+                            else
+                                has_non_static = true;
+                        }
+                        if (has_static) {
+                            static_area ++;
+                            if (has_non_static)
+                                non_static_area ++;
+                        }
+                    }
+                }
+                return non_static_area / static_area;
             }
 
 			const scene = new THREE.Scene();
-
-            const camera = new THREE.OrthographicCamera();
+            
+            const maxY = window.innerHeight / window.innerWidth;
+            const camera = new THREE.OrthographicCamera(-1, 1, maxY, -maxY);
             camera.position.z = 1000;
 
             const renderer = new THREE.WebGLRenderer();
@@ -125,7 +209,46 @@
                     rotation: 0,
                     x: -0.02,
                     y: -0.05
-                }
+                },
+		    {
+                    type: "circle",
+                    color: 0x4169E1,
+                    radius: 0.05,
+                    thetaStart: 0,
+			  segments: 100,
+                    rotation: 0,
+                    x: -0.1,
+                    y: -0.1
+                },
+		    {
+                    type: "circle",
+                    color: 0xf8c300,
+                    radius: 0.075,
+                    thetaStart: 0,
+			  segments: 100,
+                    rotation: 0,
+                    x: -0.5,
+                    y: -0.1
+                },
+		    {
+                    type: "hexagon",
+                    color: 0xf8c5ff,
+                    radius: 0.05,
+                    thetaStart: 0,
+			  segments: 6,
+                    rotation: 0,
+                    x: -0.1,
+                    y: -0.2
+                },
+		    {
+                    type: "diamond",
+                    color: 0xff00ff,
+			  width: 0.2,
+                    height: 0.2,
+                    rotation: Math.PI / 4,
+                    x: -0.02,
+                    y: -0.05
+                },
             ];
             createElements();
             createStaticElement();
@@ -138,10 +261,11 @@
 	            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
                 if (drag !== null) {
-                    drag.object.position.x = pointer.x < -1 ? -1 : pointer.x > 1 ? 1 : (pointer.x - drag.deltaX);
-                    drag.object.position.y = pointer.y < -1 ? -1 : pointer.y > 1 ? 1 : (pointer.y - drag.deltaY);
+                    let auxX = pointer.x - drag.deltaX, auxY = pointer.y * maxY - drag.deltaY;
+                    drag.object.position.x = auxX < -1 ? -1 : auxX > 1 ? 1 : auxX;
+                    drag.object.position.y = auxY < -maxY ? -maxY : auxY > maxY ? maxY : auxY;
                 } else if (rotate !== null) {
-                    rotate.object.rotation.z = Math.atan((pointer.y - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
+                    rotate.object.rotation.z = Math.atan((pointer.y * maxY - rotate.object.position.y)/((pointer.x - rotate.object.position.x))) - rotate.initial;
                 }
             });
             window.addEventListener('mousedown', (e) => {
@@ -154,7 +278,7 @@
                         drag.deltaY = drag.point.y - drag.object.position.y;
                     } else if (event.button !== 0 && drag === null) {
                         rotate = selected;
-                        rotate.initial = Math.atan((rotate.point.y - rotate.object.position.y)/(rotate.point.x - rotate.object.position.x));
+                        rotate.initial = Math.atan((rotate.point.y - rotate.object.position.y)/(rotate.point.x - rotate.object.position.x)) - rotate.object.rotation.z;
                     }
                     for (let i = 0; i < children.length; i++) {
                         children[i].position.z = (selected.object.id === children[i].id) ? elements.length : i;
