@@ -65,7 +65,7 @@ class Triangle:
         else:
             self.e = 0
 
-def get_data():
+def get_triangles():
     triangles = []
     # parse xml
     dir_file = os.path.dirname(os.path.realpath(__file__))
@@ -119,8 +119,33 @@ def get_data():
             triangles.append(tr)
     return triangles
 
+def get_ff(t1, t2):
+    t1_centroid = np.array([t1.centroid.x, t1.centroid.y, t1.centroid.z])
+    t2_centroid = np.array([t2.centroid.x, t2.centroid.y, t2.centroid.z])
+    r = t2_centroid - t1_centroid
+
+    if np.dot(r, t1.normal) <= 0:
+        return 0
+
+    r2 = np.dot(r, r)
+    #TODO
+
+
+def get_form_factors(triangles):
+    ffs = []
+    for i in range(len(triangles)):
+        ffs.append([])
+        for j in range(i):
+            ffs[i].append(get_ff(triangles[i], triangles[j]))
+        ##
+        if i == 1:
+            break
+    return ffs
 
 if __name__ == "__main__":
     # get data from xml file
-    triangles = get_data()
-    
+    triangles = get_triangles()
+
+    # calculate form_factors
+    form_factors = get_form_factors(triangles)
+
