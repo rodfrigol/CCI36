@@ -65,12 +65,13 @@ class Triangle:
         else:
             self.e = 0
 
-def get_triangles():
-    triangles = []
+def get_doc():
     # parse xml
     dir_file = os.path.dirname(os.path.realpath(__file__))
-    doc = ET.parse(dir_file + "/source/cci36lab2.dae")
-    ns = {'': 'http://www.collada.org/2005/11/COLLADASchema'}
+    return ET.parse(dir_file + "/source/cci36lab2.dae")
+
+def get_triangles(doc, ns):
+    triangles = []
 
     geometries = doc.findall(".//geometry", ns)
     for geometry in geometries:
@@ -124,23 +125,27 @@ def get_ff(t1, t2):
     t2_centroid = np.array([t2.centroid.x, t2.centroid.y, t2.centroid.z])
     r = t2_centroid - t1_centroid
 
-    if np.dot(r, t1.normal) <= 0:
-        return 0
+    #if np.dot(r, t1.normal) <= 0:
+    #    return 0
+
+    if t1.e == 1 or t2.e == 1:
+        return 1
+    return 0
 
     r2 = np.dot(r, r)
-    #TODO
-
-    return 0
+    if r2 == 0:
+        return 0
+    return 1 / (np.pi * r2 * t1.area)
 
 def search_ff(ffs, i, j):
     if i < j:
         return ffs[j][i]
     return ffs[i][j]
 
-def solve_equations(triangles, form_factors):
+def solve_equations(triangles, form_factors, colors):
     n = len(triangles)
     resp = {}
-    for color in ['r', 'g', 'b']:
+    for color in colors:
         matrix = []
         E = []
         for i in range(n):
@@ -154,7 +159,10 @@ def solve_equations(triangles, form_factors):
                     row.append(-p * search_ff(form_factors, i, j))
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
-        resp[color] = np.matmul(E, matrix)
+        resp[color] = abs(np.matmul(matrix, E))
+        norm = max(resp[color])
+        if norm != 0:
+            resp[color] /= norm
     return resp
 
 def get_form_factors(triangles):
@@ -165,15 +173,56 @@ def get_form_factors(triangles):
             ffs[i].append(get_ff(triangles[i], triangles[j]))
     return ffs
 
+def create_new_file(resp, doc, ns):
+    i = 0
+
+    geometries = doc.findall(".//geometry", ns)
+    for geometry in geometries:
+        colors = []
+
+        sources = geometry.findall(".//source", ns)
+        if len(sources) < 4:
+            continue
+        
+        triangle = geometry.find(".//triangles//p", ns)
+        indexes = triangle.text.split(" ")
+        for j in range(int(len(indexes) / 12)):
+            colors.append(resp['r'][i])
+            colors.append(resp['g'][i])
+            colors.append(resp['b'][i])
+            colors.append(1)
+            colors.append(resp['r'][i])
+            colors.append(resp['g'][i])
+            colors.append(resp['b'][i])
+            colors.append(1)
+            colors.append(resp['r'][i])
+            colors.append(resp['g'][i])
+            colors.append(resp['b'][i])
+            colors.append(1)
+            i += 1
+        
+        colors_float_array = sources[3].find(".//float_array", ns)
+        colors_float_array.text = " ".join([str(x) for x in colors])
+    
+    dir_file = os.path.dirname(os.path.realpath(__file__))
+    doc.write(dir_file + "/output.dae")
+
 if __name__ == "__main__":
+    ns = {'': 'http://www.collada.org/2005/11/COLLADASchema'}
+    colors = ['r', 'g', 'b']
+
+    # parse xml
+    doc = get_doc()
+
     # get data from xml file
-    triangles = get_triangles()
+    triangles = get_triangles(doc, ns)
 
     # calculate form_factors
     form_factors = get_form_factors(triangles)
     
     # solve equations
-    resp = solve_equations(triangles, form_factors)
+    resp = solve_equations(triangles, form_factors, colors)
 
-    
+    # change colors on doc
+    create_new_file(resp, doc, ns)
 
