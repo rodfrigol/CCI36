@@ -130,6 +130,32 @@ def get_ff(t1, t2):
     r2 = np.dot(r, r)
     #TODO
 
+    return 0
+
+def search_ff(ffs, i, j):
+    if i < j:
+        return ffs[j][i]
+    return ffs[i][j]
+
+def solve_equations(triangles, form_factors):
+    n = len(triangles)
+    resp = {}
+    for color in ['r', 'g', 'b']:
+        matrix = []
+        E = []
+        for i in range(n):
+            E.append(triangles[i].e)
+            p = getattr(triangles[i].color, color)
+            row = []
+            for j in range(n):
+                if i == j:
+                    row.append(1)
+                else:
+                    row.append(-p * search_ff(form_factors, i, j))
+            matrix.append(row)
+        matrix = np.linalg.inv(matrix)
+        resp[color] = np.matmul(E, matrix)
+    return resp
 
 def get_form_factors(triangles):
     ffs = []
@@ -137,9 +163,6 @@ def get_form_factors(triangles):
         ffs.append([])
         for j in range(i):
             ffs[i].append(get_ff(triangles[i], triangles[j]))
-        ##
-        if i == 1:
-            break
     return ffs
 
 if __name__ == "__main__":
@@ -148,4 +171,9 @@ if __name__ == "__main__":
 
     # calculate form_factors
     form_factors = get_form_factors(triangles)
+    
+    # solve equations
+    resp = solve_equations(triangles, form_factors)
+
+    
 
