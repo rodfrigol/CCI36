@@ -121,26 +121,25 @@ def get_triangles(doc, ns):
     return triangles
 
 def get_ff(t1, t2):
+    #if t1.e == 1 or t2.e == 1:
+    #    return 1
+    #return 0
+
     t1_centroid = np.array([t1.centroid.x, t1.centroid.y, t1.centroid.z])
     t2_centroid = np.array([t2.centroid.x, t2.centroid.y, t2.centroid.z])
     r = t2_centroid - t1_centroid
 
-    #if np.dot(r, t1.normal) <= 0:
-    #    return 0
-
-    if t1.e == 1 or t2.e == 1:
-        return 1
-    return 0
-
     r2 = np.dot(r, r)
     if r2 == 0:
         return 0
-    return 1 / (np.pi * r2 * t1.area)
+    mod_r = np.sqrt(r2)
 
-def search_ff(ffs, i, j):
-    if i < j:
-        return ffs[j][i]
-    return ffs[i][j]
+    cos01 = np.dot(r, t1.normal) / mod_r
+    if cos01 < 0:
+        return 0
+    cos02 = -np.dot(r, t2.normal) / mod_r
+    
+    return (cos01 * cos02 * t2.area) / (np.pi * r2)
 
 def solve_equations(triangles, form_factors, colors):
     n = len(triangles)
@@ -156,20 +155,22 @@ def solve_equations(triangles, form_factors, colors):
                 if i == j:
                     row.append(1)
                 else:
-                    row.append(-p * search_ff(form_factors, i, j))
+                    row.append(-p * form_factors[i][j])
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
         resp[color] = abs(np.matmul(matrix, E))
         norm = max(resp[color])
         if norm != 0:
             resp[color] /= norm
+    print(resp)
     return resp
 
 def get_form_factors(triangles):
     ffs = []
-    for i in range(len(triangles)):
+    n = len(triangles)
+    for i in range(n):
         ffs.append([])
-        for j in range(i):
+        for j in range(n):
             ffs[i].append(get_ff(triangles[i], triangles[j]))
     return ffs
 
