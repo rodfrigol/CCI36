@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import os
+import sys
 import numpy as np
 
 class Point:
@@ -57,7 +58,7 @@ class Triangle:
         x = np.mean(np.array([self.p1.x, self.p2.x, self.p3.x]))
         y = np.mean(np.array([self.p1.y, self.p2.y, self.p3.y]))
         z = np.mean(np.array([self.p1.z, self.p2.z, self.p3.z]))
-        self.centroid = Point(x, y, z)
+        self.centroid = np.array([x, y, z])
     
     def get_e(self, geo_name):
         if geo_name == "Cube.001" and self.normal[1] == -1:
@@ -120,26 +121,33 @@ def get_triangles(doc, ns):
             triangles.append(tr)
     return triangles
 
-def get_ff(t1, t2):
-    #if t1.e == 1 or t2.e == 1:
-    #    return 1
-    #return 0
+def has_intersection(t1_centroid, r, r2, mod_r, triangles):
+    for tr in triangles:
+        vec = tr.centroid - t1_centroid
+        intersection_lambda = np.dot(vec, r) / r2
+        if intersection_lambda > 0.001 and intersection_lambda < 0.999:
+            d = np.linalg.norm(np.cross(vec, r)) / mod_r
+            if d < 0.05:
+                return True
+    return False
 
-    t1_centroid = np.array([t1.centroid.x, t1.centroid.y, t1.centroid.z])
-    t2_centroid = np.array([t2.centroid.x, t2.centroid.y, t2.centroid.z])
-    r = t2_centroid - t1_centroid
+def get_ff(t1, t2, triangles):
+    if t2.e != 1:
+        return 0
 
+    r = t2.centroid - t1.centroid
     r2 = np.dot(r, r)
     if r2 == 0:
         return 0
     mod_r = np.sqrt(r2)
 
-    cos01 = np.dot(r, t1.normal) / mod_r
-    if cos01 < 0:
+    if has_intersection(t1.centroid, r, r2, mod_r, triangles):
         return 0
+
+    cos01 = np.dot(r, t1.normal) / mod_r
     cos02 = -np.dot(r, t2.normal) / mod_r
     
-    return (cos01 * cos02 * t2.area) / (np.pi * r2)
+    return abs((cos01 * cos02 * t2.area) / (np.pi * r2 + t2.area))
 
 def solve_equations(triangles, form_factors, colors):
     n = len(triangles)
@@ -159,10 +167,9 @@ def solve_equations(triangles, form_factors, colors):
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
         resp[color] = abs(np.matmul(matrix, E))
-        norm = max(resp[color])
+        norm = max(resp[color]) / 5
         if norm != 0:
             resp[color] /= norm
-    print(resp)
     return resp
 
 def get_form_factors(triangles):
@@ -171,7 +178,7 @@ def get_form_factors(triangles):
     for i in range(n):
         ffs.append([])
         for j in range(n):
-            ffs[i].append(get_ff(triangles[i], triangles[j]))
+            ffs[i].append(get_ff(triangles[i], triangles[j], triangles))
     return ffs
 
 def create_new_file(resp, doc, ns):
@@ -217,6 +224,14 @@ if __name__ == "__main__":
 
     # get data from xml file
     triangles = get_triangles(doc, ns)
+
+    #
+    #r = triangles[1].centroid - triangles[0].centroid
+    #r2 = np.dot(r, r)
+    #mod_r = np.sqrt(r2)
+    #has_intersection(triangles[0].centroid, r, r2, mod_r, triangles)
+    #sys.exit(0)
+    #
 
     # calculate form_factors
     form_factors = get_form_factors(triangles)
