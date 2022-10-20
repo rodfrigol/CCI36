@@ -225,14 +225,6 @@ if __name__ == "__main__":
     # get data from xml file
     triangles = get_triangles(doc, ns)
 
-    #
-    #r = triangles[1].centroid - triangles[0].centroid
-    #r2 = np.dot(r, r)
-    #mod_r = np.sqrt(r2)
-    #has_intersection(triangles[0].centroid, r, r2, mod_r, triangles)
-    #sys.exit(0)
-    #
-
     # calculate form_factors
     form_factors = get_form_factors(triangles)
     
