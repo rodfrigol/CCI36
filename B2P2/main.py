@@ -191,7 +191,7 @@ def solve_equations(triangles, form_factors, colors):
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
         resp[color] = np.matmul(matrix, E)
-        resp[color] *= 100
+        resp[color] *= 200
     return resp
 
 def get_form_factors(triangles):
