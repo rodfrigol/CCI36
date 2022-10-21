@@ -133,19 +133,29 @@ def get_triangles(doc, ns):
             triangles.append(tr)
     return triangles
 
-def has_intersection(t1_centroid, r, r2, mod_r, triangles):
+def has_intersection(t1_centroid, r, r2, mod_r, triangles, i, j, intersections):
+    if i > j:
+        aux = j
+        j = i
+        i = aux
+    if i not in intersections:
+        intersections[i] = {}
+    elif j in intersections[i]:
+        return intersections[i][j]
     for tr in triangles:
         vec = tr.centroid - t1_centroid
         intersection_lambda = np.dot(vec, r) / r2
         if intersection_lambda > 0.1 and intersection_lambda < 0.9:
             d = np.linalg.norm(np.cross(vec, r)) / mod_r
             if d < 0.2:
+                intersections[i][j] = True
                 return True
+    intersections[i][j] = False
     return False
 
-def get_ff(t1, t2, triangles):
-    #if t2.e != 1:
-    #    return 0
+def get_ff(i, j, triangles, intersections):
+    t1 = triangles[i]
+    t2 = triangles[j]
 
     r = t2.centroid - t1.centroid
     r2 = np.dot(r, r)
@@ -153,13 +163,13 @@ def get_ff(t1, t2, triangles):
         return 0
     mod_r = np.sqrt(r2)
 
-    if has_intersection(t1.centroid, r, r2, mod_r, triangles):
-        return 0
-
     cos01 = np.dot(r, t1.normal) / mod_r
     if cos01 < 0:
         return 0
     cos02 = -np.dot(r, t2.normal) / mod_r
+
+    if has_intersection(t1.centroid, r, r2, mod_r, triangles, i, j, intersections):
+        return 0
     
     return (cos01 * cos02 * t2.area) / (np.pi * r2 + t2.area)
 
@@ -181,17 +191,18 @@ def solve_equations(triangles, form_factors, colors):
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
         resp[color] = np.matmul(matrix, E)
-        norm = 0.003
-        resp[color] /= norm
+        resp[color] *= 100
     return resp
 
 def get_form_factors(triangles):
     ffs = []
+    intersections = {}
     n = len(triangles)
     for i in range(n):
+        print("{}/{}".format(i, n))
         ffs.append([])
         for j in range(n):
-            ffs[i].append(get_ff(triangles[i], triangles[j], triangles))
+            ffs[i].append(get_ff(i, j, triangles, intersections))
     return ffs
 
 def create_new_file(resp, doc, ns):
