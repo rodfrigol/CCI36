@@ -76,18 +76,30 @@ def get_triangles(doc, ns):
 
     geometries = doc.findall(".//geometry", ns)
     for geometry in geometries:
+        #
+        #if geometry.attrib.get("name") != "Cube.001":
+        #    continue
+
         sources = geometry.findall(".//source", ns)
-        if len(sources) < 4:
-            continue
+        m = doc.find(".//instance_geometry[@url='{}']...//matrix".format("#" + geometry.attrib.get("id")), ns)
+        vec = m.text.split(" ")
+
+        scaleX = float(vec[0])
+        scaleY = float(vec[5])
+        scaleZ = float(vec[10])
+        locX = float(vec[3])
+        locY = float(vec[7])
+        locZ = float(vec[11])
+
         # get points
         points_float_array = sources[0].find(".//float_array", ns)
         points_arr = points_float_array.text.split(" ")
         points = []
         for i in range(int(len(points_arr) / 3)):
             offset = i * 3
-            x = float(points_arr[offset])
-            y = float(points_arr[offset + 1])
-            z = float(points_arr[offset + 2])
+            x = float(points_arr[offset]) * scaleX + locX
+            y = float(points_arr[offset + 1]) * scaleY + locY
+            z = float(points_arr[offset + 2]) * scaleZ + locZ
             points.append(Point(x, y, z))
 
         # get colors
@@ -125,15 +137,15 @@ def has_intersection(t1_centroid, r, r2, mod_r, triangles):
     for tr in triangles:
         vec = tr.centroid - t1_centroid
         intersection_lambda = np.dot(vec, r) / r2
-        if intersection_lambda > 0.001 and intersection_lambda < 0.999:
+        if intersection_lambda > 0.1 and intersection_lambda < 0.9:
             d = np.linalg.norm(np.cross(vec, r)) / mod_r
-            if d < 0.05:
+            if d < 0.2:
                 return True
     return False
 
 def get_ff(t1, t2, triangles):
-    if t2.e != 1:
-        return 0
+    #if t2.e != 1:
+    #    return 0
 
     r = t2.centroid - t1.centroid
     r2 = np.dot(r, r)
@@ -145,9 +157,11 @@ def get_ff(t1, t2, triangles):
         return 0
 
     cos01 = np.dot(r, t1.normal) / mod_r
+    if cos01 < 0:
+        return 0
     cos02 = -np.dot(r, t2.normal) / mod_r
     
-    return abs((cos01 * cos02 * t2.area) / (np.pi * r2 + t2.area))
+    return (cos01 * cos02 * t2.area) / (np.pi * r2 + t2.area)
 
 def solve_equations(triangles, form_factors, colors):
     n = len(triangles)
@@ -166,10 +180,9 @@ def solve_equations(triangles, form_factors, colors):
                     row.append(-p * form_factors[i][j])
             matrix.append(row)
         matrix = np.linalg.inv(matrix)
-        resp[color] = abs(np.matmul(matrix, E))
-        norm = max(resp[color]) / 5
-        if norm != 0:
-            resp[color] /= norm
+        resp[color] = np.matmul(matrix, E)
+        norm = 0.003
+        resp[color] /= norm
     return resp
 
 def get_form_factors(triangles):
@@ -189,8 +202,6 @@ def create_new_file(resp, doc, ns):
         colors = []
 
         sources = geometry.findall(".//source", ns)
-        if len(sources) < 4:
-            continue
         
         triangle = geometry.find(".//triangles//p", ns)
         indexes = triangle.text.split(" ")
