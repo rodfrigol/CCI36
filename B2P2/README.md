@@ -36,7 +36,7 @@ Caso nenhuma dessas três situações ocorra, calculamos o fator de forma por me
 ### Cálculo das respostas
 
 Nessa etapa a função solve_equations completa as matrizes do sistema de equação de radiosidade para cada uma das cores.
-Para isso, preenchemos a matriz n x n com o valor -p[i] * form_factors[i][j]. Por fim, usamos o método numpy.linalg.inv para inverter a matriz nx n e numpy.matmul para multiplicar a matriz n x n pela matriz coluna com os parâmetros E.
+Para isso, preenchemos a matriz n x n com o valor -p[i] * form_factors[i][j]. Por fim, usamos o método numpy.linalg.inv para inverter a matriz n x n e numpy.matmul para multiplicar a matriz n x n pela matriz coluna com os parâmetros E.
 Após isso usamos o fator de normalização 200 para ajustar a intensidade das cores.
 
 ### Novo arquivo
