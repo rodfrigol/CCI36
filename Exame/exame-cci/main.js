@@ -9,9 +9,20 @@ import { Sky } from 'three/addons/objects/Sky.js'; */
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 let camera, scene, renderer;
 let controls, water, sun;
+
+const loader = new GLTFLoader();
+
+loader.load( 'assets/boat/scene.gltf', function ( gltf ) {
+  scene.add( gltf.scene )
+  gltf.scene.scale.set( 3, 3, 3 )
+  gltf.scene.position.set(5, 13, 50)
+  gltf.scene.rotation.y = 1.5
+})
+
 
 init();
 animate();
