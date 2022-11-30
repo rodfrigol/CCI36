@@ -53,6 +53,19 @@ class Boat {
 
 const boat = new Boat()
 
+
+class Trash{
+  constructor(){
+    loader.load( 'assets/trash/scene.gltf', ( gltf ) => {
+      scene.add( gltf.scene )
+      gltf.scene.position.set( 0, -.8, 0 )
+      gltf.scene.scale.set( 1.5, 1.5, 1.5 )
+    })
+  }
+}
+
+let trash = new Trash()
+
 init();
 animate();
 
