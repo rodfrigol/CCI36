@@ -236,10 +236,10 @@ async function checkCollisions() {
   if (boat.boat) {
     for(let i = 0; i < TRASH_COUNT; i++)
       if (trashes[i] && trashes[i].trash && isColliding(boat.boat, trashes[i].trash)) {
-        collected ++;
-        await updateCollected();
+        collected ++
         scene.remove(trashes[i].trash)
         trashes[i].trash = null
+        await updateCollected()
       }
   }
 }
@@ -249,17 +249,17 @@ async function updateCollected() {
   let u = remaining % 10, d = Math.floor(remaining / 10);
   document.getElementById("n1").src = "assets/numbers/" + d + ".png"
   document.getElementById("n2").src = "assets/numbers/" + u + ".png"
-  if (remaining === 0) {
+  if (remaining === 0 && !lost) {
     TRASH_COUNT += 5
+    trashes = []
+    for (let i = 0; i < TRASH_COUNT; i++) {
+      trashes.push(await createTrash())
+    }
     collected = 0
     await updateCollected()
     time = 21
     updateTimer()
     lost = false
-    trashes = []
-    for (let i = 0; i < TRASH_COUNT; i++) {
-      trashes.push(await createTrash())
-    }
   }
 }
 
@@ -270,8 +270,8 @@ function startTimer() {
 function updateTimer() {
   let u = time % 10, d = Math.floor(time / 10);
     if (time === 0) {
-      stopTimer()
       lost = true
+      stopTimer()
       document.getElementById("l1").style.display = 'inline-block'
       document.getElementById("l2").style.display = 'inline-block'
       document.getElementById("l3").style.display = 'inline-block'
