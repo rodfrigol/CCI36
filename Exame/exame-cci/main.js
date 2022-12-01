@@ -10,18 +10,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { BooleanKeyframeTrack } from 'three';
 
 let camera, scene, renderer;
 let controls, water, sun;
+let collected = 0;
 
 const loader = new GLTFLoader();
 
-// loader.load( 'assets/boat/scene.gltf', function ( gltf ) {
-//   scene.add( gltf.scene )
-//   gltf.scene.scale.set( 3, 3, 3 )
-//   gltf.scene.position.set(5, 13, 50)
-//   gltf.scene.rotation.y = 1.5
-// })
+function random(min, max) {
+  return Math.random() * (max - min) + min
+}
 
 class Boat {
   constructor(){
@@ -45,31 +44,43 @@ class Boat {
       this.boat.translateX(this.speed.vel)
     }
   }
-  stop() {
-    this.speed.vel = 0
-    this.speed.rot = 0
-  }
 }
 
 const boat = new Boat()
 
-
 class Trash{
-  constructor(){
-    loader.load( 'assets/trash/scene.gltf', ( gltf ) => {
-      scene.add( gltf.scene )
-      gltf.scene.position.set( 0, -.8, 0 )
-      gltf.scene.scale.set( 1.5, 1.5, 1.5 )
-    })
+  constructor(_scene){
+    scene.add( _scene )
+    _scene.scale.set( 1.5, 1.5, 1.5 )
+    _scene.position.set( random(-200, 200), -.8, random(-200, 200) )
+
+    this.trash = _scene
   }
 }
 
-let trash = new Trash()
+async function loadModel(url) {
+  return new Promise((resolve, reject) => {
+    loader.load(url, (gltf) => {
+      resolve(gltf.scene)
+    });
+  });
+}
+
+let trashModel = null;
+async function createTrash() {
+  if (!trashModel) {
+    trashModel = await loadModel("assets/trash/scene.gltf")
+  }
+  return new Trash(trashModel.clone())
+}
+
+let trashes = []
+const TRASH_COUNT = 50
 
 init();
 animate();
 
-function init() {
+async function init() {
 
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio( window.devicePixelRatio );
@@ -164,6 +175,10 @@ function init() {
 
   const waterUniforms = water.material.uniforms;
 
+  for (let i = 0; i < TRASH_COUNT; i++) {
+    trashes.push(await createTrash())
+  }
+
   window.addEventListener( 'resize', onWindowResize );
 
   window.addEventListener( 'keydown', function(e){
@@ -181,30 +196,40 @@ function init() {
     }
   })
 
-  window.addEventListener( 'keyup', function(e){
-    boat.stop()
+  window.addEventListener( 'keyup', function(e) {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') boat.speed.vel = 0;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') boat.speed.rot = 0;
   })
 }
 
 function onWindowResize() {
-
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 function animate() {
   boat.update();
   requestAnimationFrame( animate );
   render();
-
+  checkCollisions();
 }
 
 function render() {
   water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
-
   renderer.render( scene, camera );
+}
 
+function isColliding(obj1, obj2) {
+  return Math.abs(obj1.position.x - obj2.position.x) < 15 && Math.abs(obj1.position.z - obj2.position.z) < 15
+}
+
+function checkCollisions() {
+  if (boat.boat) {
+    for(let i = 0; i < TRASH_COUNT; i++)
+      if (trashes[i] && trashes[i].trash && isColliding(boat.boat, trashes[i].trash)) {
+        collected ++;
+        scene.remove(trashes[i].trash)
+      }
+  }
 }
