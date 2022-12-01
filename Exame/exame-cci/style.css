@@ -2,3 +2,26 @@
   margin: 0;
   padding: 0;
 }
+
+.board {
+  position: absolute;
+  padding: 10px;
+}
+
+.timer {
+  right: 0;
+}
+
+.starter {
+  left: calc( 50% - 70px );
+  top: calc( 50% - 100px );
+}
+
+.lost {
+  left: calc( 50% - 140px );
+  top: calc( 50% - 100px );
+}
+
+.hide {
+  display: none;
+}

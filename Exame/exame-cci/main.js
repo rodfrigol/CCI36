@@ -52,7 +52,7 @@ class Trash{
   constructor(_scene){
     scene.add( _scene )
     _scene.scale.set( 1.5, 1.5, 1.5 )
-    _scene.position.set( random(-200, 200), -.8, random(-200, 200) )
+    _scene.position.set( random(-100, 100), -.8, random(-100, 100) )
 
     this.trash = _scene
   }
@@ -75,10 +75,17 @@ async function createTrash() {
 }
 
 let trashes = []
-const TRASH_COUNT = 50
+let TRASH_COUNT = 5
+let time = 20
+let countDown = 3
+let lost = false
+let timer
+let countdown
 
 init();
 animate();
+updateCollected();
+startCountDown();
 
 async function init() {
 
@@ -93,7 +100,7 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 20000 );
-  camera.position.set( 30, 30, 100 );
+  camera.position.set( 60, 60, 200 );
 
   //
 
@@ -182,6 +189,7 @@ async function init() {
   window.addEventListener( 'resize', onWindowResize );
 
   window.addEventListener( 'keydown', function(e){
+    if (countDown >= 0 || lost) return
     if(e.key === 'ArrowUp'){
       boat.speed.vel = 1
     }
@@ -208,11 +216,11 @@ function onWindowResize() {
   renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-function animate() {
+async function animate() {
   boat.update();
   requestAnimationFrame( animate );
   render();
-  checkCollisions();
+  await checkCollisions();
 }
 
 function render() {
@@ -224,12 +232,80 @@ function isColliding(obj1, obj2) {
   return Math.abs(obj1.position.x - obj2.position.x) < 15 && Math.abs(obj1.position.z - obj2.position.z) < 15
 }
 
-function checkCollisions() {
+async function checkCollisions() {
   if (boat.boat) {
     for(let i = 0; i < TRASH_COUNT; i++)
       if (trashes[i] && trashes[i].trash && isColliding(boat.boat, trashes[i].trash)) {
         collected ++;
+        await updateCollected();
         scene.remove(trashes[i].trash)
+        trashes[i].trash = null
       }
   }
+}
+
+async function updateCollected() {
+  let remaining = TRASH_COUNT - collected
+  let u = remaining % 10, d = Math.floor(remaining / 10);
+  document.getElementById("n1").src = "assets/numbers/" + d + ".png"
+  document.getElementById("n2").src = "assets/numbers/" + u + ".png"
+  if (remaining === 0) {
+    TRASH_COUNT += 5
+    collected = 0
+    await updateCollected()
+    time = 21
+    updateTimer()
+    lost = false
+    trashes = []
+    for (let i = 0; i < TRASH_COUNT; i++) {
+      trashes.push(await createTrash())
+    }
+  }
+}
+
+function startTimer() {
+  timer = setInterval(updateTimer, 1000)
+}
+
+function updateTimer() {
+  let u = time % 10, d = Math.floor(time / 10);
+    if (time === 0) {
+      stopTimer()
+      lost = true
+      document.getElementById("l1").style.display = 'inline-block'
+      document.getElementById("l2").style.display = 'inline-block'
+      document.getElementById("l3").style.display = 'inline-block'
+      document.getElementById("l4").style.display = 'inline-block'
+    } else time--;
+    document.getElementById("t1").src = "assets/numbers/" + d + ".png"
+    document.getElementById("t2").src = "assets/numbers/" + u + ".png"
+}
+
+function stopTimer() {
+  clearInterval(timer)
+}
+
+function startCountDown() {
+  let u = time % 10, d = Math.floor(time / 10);
+  document.getElementById("t1").src = "assets/numbers/" + d + ".png"
+  document.getElementById("t2").src = "assets/numbers/" + u + ".png"
+  countdown = setInterval(() => {
+    if (countDown === 0) {
+      stopCountDown()
+      document.getElementById("s1").src = "assets/numbers/g.png"
+      document.getElementById("s2").src = "assets/numbers/o.png"
+      startTimer()
+      setTimeout(() => {
+        document.getElementById("s1").style.display = "none"
+        document.getElementById("s2").style.display = "none"
+      }, 1000)
+    } else {
+      document.getElementById("s2").src = "assets/numbers/" + countDown + ".png"
+    }
+    countDown --;
+  }, 1000)
+}
+
+function stopCountDown() {
+  clearInterval(countdown)
 }
